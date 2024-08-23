@@ -23,7 +23,8 @@
 		}
 	},
 	"activationEvents": [
-		"onLanguage:less"
+		"onLanguage:less",
+		"onLanguage:vue"
 	],
 	"scripts": {
 		"vscode:prepublish": "pnpm run package",
