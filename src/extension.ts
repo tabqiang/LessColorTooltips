@@ -13,9 +13,11 @@ export function activate(context: vscode.ExtensionContext) {
 				const word = document.getText(range)
 				const properties = await findPropertiesInProject(word)
 				if (properties.length > 0) {
-					const formattedProperties = properties.map(prop => `@${prop}`)
+					const formattedProperties = properties
+						.map(prop => `@${prop}`)
+						.join("\n\n") // 使用双换行符确保每个属性单独占一行
 					return new vscode.Hover(
-						new vscode.MarkdownString(formattedProperties.join("\r\n"))
+						new vscode.MarkdownString(formattedProperties)
 					)
 				}
 			}
@@ -44,15 +46,7 @@ async function findPropertiesInProject(color: string): Promise<string[]> {
 	if (stat.isDirectory()) {
 		await searchFiles(filePath, color, properties)
 	} else {
-		const content = await fs.promises.readFile(filePath, "utf-8")
-		const regex = new RegExp(
-			`--(\\w+(?:-\\w+)*):\\s*${escapeRegExp(color)}\\b`,
-			"g"
-		)
-		let match
-		while ((match = regex.exec(content)) !== null) {
-			properties.push(match[1])
-		}
+		await searchFile(filePath, color, properties)
 	}
 
 	return properties
@@ -66,15 +60,35 @@ async function searchFiles(dir: string, color: string, properties: string[]) {
 		if (stat.isDirectory()) {
 			await searchFiles(filePath, color, properties)
 		} else if (filePath.endsWith(".less") || filePath.endsWith(".css")) {
-			const content = await fs.promises.readFile(filePath, "utf-8")
-			const regex = new RegExp(
-				`--(\\w+(?:-\\w+)*):\\s*${escapeRegExp(color)}\\b`,
-				"g"
-			)
-			let match
-			while ((match = regex.exec(content)) !== null) {
-				properties.push(match[1])
+			await searchFile(filePath, color, properties)
+		}
+	}
+}
+
+async function searchFile(
+	filePath: string,
+	color: string,
+	properties: string[]
+) {
+	const content = await fs.promises.readFile(filePath, "utf-8")
+	const lines = content.split("\n")
+	const regex = new RegExp(
+		`--(\\w+(?:-\\w+)*):\\s*${escapeRegExp(color)}\\b`,
+		"g"
+	)
+
+	for (let i = 0; i < lines.length; i++) {
+		let match
+		while ((match = regex.exec(lines[i])) !== null) {
+			let property = match[1]
+			if (i > 0 && lines[i - 1].trim().startsWith("/*")) {
+				const comment = lines[i - 1]
+					.trim()
+					.replace(/\/\*|\*\//g, "")
+					.trim()
+				property = `${property}: ${comment}`
 			}
+			properties.push(property)
 		}
 	}
 }
