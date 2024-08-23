@@ -11,24 +11,16 @@
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
-		"languages": [
-			{
-				"id": "less",
-				"extensions": [
-					".less"
-				],
-				"aliases": [
-					"Less",
-					"less"
-				]
+		"configuration": {
+			"type": "object",
+			"properties": {
+				"lessColorTooltip.filePath": {
+					"type": "string",
+					"default": "",
+					"description": "Specify the file path to search for color properties."
+				}
 			}
-		],
-		"hover": [
-			{
-				"language": "less",
-				"provider": true
-			}
-		]
+		}
 	},
 	"activationEvents": [
 		"onLanguage:less"
