@@ -1,15 +1,27 @@
-import * as assert from 'assert';
+import * as assert from "assert";
+import * as vscode from "vscode";
+import * as path from "path";
+import * as fs from "fs";
 
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
-import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
+suite("Extension Test Suite", () => {
+  vscode.window.showInformationMessage("Start all tests.");
 
-suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+  test("Hover Provider Test", async () => {
+    const uri = vscode.Uri.file(
+      path.join(__dirname, "..", "testFixture", "test.vue")
+    );
+    const document = await vscode.workspace.openTextDocument(uri);
+    const editor = await vscode.window.showTextDocument(document);
 
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
-	});
+    const position = new vscode.Position(10, 15); // Adjust the position to where the color code is in your test file
+    const hover = await vscode.commands.executeCommand<vscode.Hover[]>(
+      "vscode.executeHoverProvider",
+      uri,
+      position
+    );
+
+    assert.ok(hover, "Hover is null or undefined");
+    assert.ok(hover.length > 0, "No hover results");
+    assert.ok(hover[0].contents.length > 0, "Hover contents are empty");
+  });
 });
