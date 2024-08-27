@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
                     if (range.contains(position)) {
                         const wordRange = document.getWordRangeAtPosition(
                             position,
-                            /#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?\(\s*\d+\s*,\s*\d+\\s*,\s*\d+(?:\s*,\s*\d+)?\s*\)/
+                            /#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*\d+)?\s*\)/i
                         )
                         if (wordRange) {
                             const word = document.getText(wordRange)
@@ -37,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
             } else {
                 const range = document.getWordRangeAtPosition(
                     position,
-                    /#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?\(\s*\d+\s*,\s*\d+\\s*,\s*\d+(?:\s*,\s*\d+)?\s*\)/
+                    /#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(?:\s*,\s*\d+)?\s*\)/i
                 )
                 if (range) {
                     const word = document.getText(range)
@@ -105,7 +105,7 @@ async function searchFile(
     const lines = content.split("\n")
     const regex = new RegExp(
         `--(\\w+(?:-\\w+)*):\\s*${escapeRegExp(color)}\\b`,
-        "g"
+        "gi"
     )
 
     for (let i = 0; i < lines.length; i++) {
