@@ -67,7 +67,8 @@ export function activate(context: vscode.ExtensionContext) {
 async function findPropertiesInProject(color: string): Promise<string[]> {
 	const properties: string[] = []
 	const config = vscode.workspace.getConfiguration("lessColorTooltip")
-	const relativeFilePath = config.get<string>("filePath")
+	let relativeFilePath = config.get<string>("filePath")
+
 	if (!relativeFilePath) {
 		return properties
 	}
@@ -75,6 +76,11 @@ async function findPropertiesInProject(color: string): Promise<string[]> {
 	const rootPath = vscode.workspace.workspaceFolders?.[0].uri.fsPath
 	if (!rootPath) {
 		return properties
+	}
+
+	// 如果 relativeFilePath 是绝对路径，则去掉 rootPath 部分
+	if (path.isAbsolute(relativeFilePath)) {
+		relativeFilePath = path.relative(rootPath, relativeFilePath)
 	}
 
 	const filePath = path.join(rootPath, relativeFilePath)
