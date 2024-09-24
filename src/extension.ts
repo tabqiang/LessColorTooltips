@@ -78,6 +78,7 @@ async function findPropertiesInProject(color: string): Promise<string[]> {
 	}
 
 	const filePath = path.join(rootPath, relativeFilePath)
+	outputChannel.appendLine(`Searching for color ${color} in ${filePath}`)
 	const stat = await fs.promises.stat(filePath)
 	if (stat.isDirectory()) {
 		await searchFiles(filePath, color, properties)
@@ -85,6 +86,7 @@ async function findPropertiesInProject(color: string): Promise<string[]> {
 		await searchFile(filePath, color, properties)
 	}
 
+	outputChannel.appendLine(`Found ${properties.toString()} properties`)
 	return properties
 }
 
@@ -110,7 +112,6 @@ async function searchFile(
 	const lines = content.split("\n")
 
 	for (let i = 0; i < lines.length; i++) {
-
 		if (lines[i].includes(color)) {
 			//兼容rgb格式
 			//从lines[i]数据中--popover-shadow-color: rgba(205, 210, 218,0.4)先配出--popover-shadow-color，再去掉前面的--和空格
