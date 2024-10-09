@@ -67,9 +67,10 @@ export function activate(context: vscode.ExtensionContext) {
 async function findPropertiesInProject(color: string): Promise<string[]> {
 	const properties: string[] = []
 	const config = vscode.workspace.getConfiguration("lessColorTooltip")
-	let relativeFilePath = config.get<string>("filePath")
+	const themePath = config.get<string>("themePath")
+	const variablePath = config.get<string>("variablePath")
 
-	if (!relativeFilePath) {
+	if (!themePath || !variablePath) {
 		return properties
 	}
 
@@ -78,64 +79,82 @@ async function findPropertiesInProject(color: string): Promise<string[]> {
 		return properties
 	}
 
-	// 如果 relativeFilePath 是绝对路径，则去掉 rootPath 部分
-	if (path.isAbsolute(relativeFilePath)) {
-		relativeFilePath = path.relative(rootPath, relativeFilePath)
-	}
+	// 处理 themePath 和 variablePath
+	const resolvedThemePath = resolveFilePath(rootPath, themePath)
+	const resolvedVariablePath = resolveFilePath(rootPath, variablePath)
 
-	const filePath = path.join(rootPath, relativeFilePath)
-	outputChannel.appendLine(`Searching for color ${color} in ${filePath}`)
-	const stat = await fs.promises.stat(filePath)
-	if (stat.isDirectory()) {
-		await searchFiles(filePath, color, properties)
-	} else {
-		await searchFile(filePath, color, properties)
+	// 在 themePath 文件中查找与 color 匹配的自定义属性
+	const themeProperties = await searchFileForColor(resolvedThemePath, color)
+	outputChannel.appendLine(
+		`Found ${themeProperties.toString()} theme properties`
+	)
+
+	// 在 variablePath 文件中查找使用了这些自定义属性的 less 变量
+	for (const property of themeProperties) {
+		const variableProperties = await searchFileForVariable(
+			resolvedVariablePath,
+			property
+		)
+		outputChannel.appendLine(
+			`Found ${variableProperties.toString()} variables for ${property}`
+		)
+		properties.push(...variableProperties)
 	}
 
 	outputChannel.appendLine(`Found ${properties.toString()} properties`)
 	return properties
 }
 
-async function searchFiles(dir: string, color: string, properties: string[]) {
-	const files = await fs.promises.readdir(dir)
-	for (const file of files) {
-		const filePath = path.join(dir, file)
-		const stat = await fs.promises.stat(filePath)
-		if (stat.isDirectory()) {
-			await searchFiles(filePath, color, properties)
-		} else if (filePath.endsWith(".less") || filePath.endsWith(".css")) {
-			await searchFile(filePath, color, properties)
-		}
+function resolveFilePath(rootPath: string, relativeFilePath: string): string {
+	// 如果 relativeFilePath 是绝对路径，则去掉 rootPath 部分
+	if (path.isAbsolute(relativeFilePath)) {
+		relativeFilePath = path.relative(rootPath, relativeFilePath)
 	}
+	return path.resolve(rootPath, relativeFilePath)
 }
 
-async function searchFile(
+async function searchFileForColor(
 	filePath: string,
-	color: string,
-	properties: string[]
-) {
+	color: string
+): Promise<string[]> {
+	const properties: string[] = []
 	const content = await fs.promises.readFile(filePath, "utf-8")
 	const lines = content.split("\n")
 
 	for (let i = 0; i < lines.length; i++) {
 		if (lines[i].includes(color)) {
-			//兼容rgb格式
-			//从lines[i]数据中--popover-shadow-color: rgba(205, 210, 218,0.4)先配出--popover-shadow-color，再去掉前面的--和空格
 			let property = lines[i].split(":")[0].replace(/--| /g, "")
+			properties.push(property)
+		}
+	}
+
+	return properties
+}
+
+async function searchFileForVariable(
+	filePath: string,
+	property: string
+): Promise<string[]> {
+	const variableList: string[] = []
+	const content = await fs.promises.readFile(filePath, "utf-8")
+	const lines = content.split("\n")
+
+	for (let i = 0; i < lines.length; i++) {
+		if (lines[i].includes(property)) {
+			let variable = lines[i].split(":")[0].replace(/@| /g, "")
 			if (i > 0 && lines[i - 1].trim().startsWith("/*")) {
 				const comment = lines[i - 1]
 					.trim()
 					.replace(/\/\*|\*\//g, "")
 					.trim()
-				property = `${property}: ${comment}`
+				variable = `${variable}: ${comment}`
 			}
-			properties.push(property)
+			//去重再push
+			if (!variableList.includes(variable)) {
+				variableList.push(variable)
+			}
 		}
 	}
-}
 
-function escapeRegExp(string: string): string {
-	return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+	return variableList
 }
-
-export function deactivate() {}

@@ -15,10 +15,15 @@
 		"configuration": {
 			"type": "object",
 			"properties": {
-				"lessColorTooltip.filePath": {
+				"lessColorTooltip.themePath": {
 					"type": "string",
 					"default": "",
-					"description": "Specify the file path to search for color properties."
+					"description": "The file path to the theme file where custom properties are defined."
+				},
+				"lessColorTooltip.variablePath": {
+					"type": "string",
+					"default": "",
+					"description": "The file path to the variable file where LESS variables are defined."
 				}
 			}
 		}
