@@ -65,7 +65,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function findPropertiesInProject(color: string): Promise<string[]> {
-	const properties: string[] = []
+	let properties: string[] = []
 	const config = vscode.workspace.getConfiguration("lessColorTooltip")
 	const themePath = config.get<string>("themePath")
 	const variablePath = config.get<string>("variablePath")
@@ -101,6 +101,8 @@ async function findPropertiesInProject(color: string): Promise<string[]> {
 		properties.push(...variableProperties)
 	}
 
+	//去重properties
+	properties = Array.from(new Set(properties))
 	outputChannel.appendLine(`Found ${properties.toString()} properties`)
 	return properties
 }
