@@ -125,13 +125,16 @@ async function searchFileForColor(
 
 	for (let i = 0; i < lines.length; i++) {
 		if (lines[i].includes(color)) {
-			let property = lines[i].split(":")[0].replace(/--| /g, "")
+			let property = lines[i].split(":")[0].replace(/@| /g, "")
 			properties.push(property)
 		}
 	}
 
 	return properties
 }
+
+// 精准匹配 修复--primary-color能匹配--primary-color-1的问题
+const varRegex = /var\(\s*([^)]+?)\s*\)/
 
 async function searchFileForVariable(
 	filePath: string,
@@ -142,7 +145,12 @@ async function searchFileForVariable(
 	const lines = content.split("\n")
 
 	for (let i = 0; i < lines.length; i++) {
-		if (lines[i].includes(property)) {
+		if (!lines[i].includes(property)) {
+			continue
+		}
+
+		const match = lines[i].match(varRegex)
+		if (match && match[1] === property) {
 			let variable = lines[i].split(":")[0].replace(/@| /g, "")
 			if (i > 0 && lines[i - 1].trim().startsWith("/*")) {
 				const comment = lines[i - 1]
