@@ -1,12 +1,10 @@
-# LessColorTooltip
-
 A tool to display color tooltips in Less files
 
 ## Features
 
 - Display color tooltips in `.less` and `.vue` files
 - Supports `#RRGGBB`, `#RGB`, and `rgba()` color formats
-- Searches for color properties from a specified file path and displays them in tooltips
+- Searches for color properties from specified file paths and displays them in tooltips
 
 ## Installation
 
@@ -19,14 +17,15 @@ A tool to display color tooltips in Less files
 
 1. Open a `.less` or `.vue` file
 2. Hover over a color value (e.g., `#RRGGBB`, `#RGB`, or `rgba()`)
-3. If the color is defined in the specified file path, a tooltip with the color properties will be displayed
+3. If the color is defined in the specified file paths, a tooltip with the color properties will be displayed
 
 ## Configuration
 
-Add the following configuration in the VS Code settings to specify the file path for searching color properties:
+Add the following configuration in the VS Code settings to specify the file paths for searching color properties and variables:
 
 ```json
 {
-  "lessColorTooltip.filePath": "path/to/your/file/or/directory"
+  "lessColorTooltip.themePath": "path/to/your/theme/file",
+  "lessColorTooltip.variablePath": "path/to/your/variable/file"
 }
 ```
